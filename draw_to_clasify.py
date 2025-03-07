@@ -1,3 +1,4 @@
+import pandas as pd
 import torch
 import torch.nn.functional as F
 import numpy as np
@@ -24,7 +25,7 @@ def draw_digit():
     fig, ax = plt.subplots(figsize=(3, 3))
     ax.set_xticks([])  # Hide axes
     ax.set_yticks([])
-    canvas = np.ones((28, 28))  # Create a blank canvas
+    canvas = np.ones((15, 15))  # Create a blank canvas
     drawing = []
 
     def on_draw(event):
@@ -41,7 +42,8 @@ def draw_digit():
     return canvas
 
 # Draw number
-image_array = draw_digit()
+# image_array = draw_digit()
+image_array = pd.read_csv("digit.csv", header=None).values
 print(image_array)
 
 # Convert drawn image to PIL Image
