@@ -10,7 +10,8 @@ from redstone_lenet_class import RedstoneLeNet
 # Load dataset (use MNIST for testing)
 transform = transforms.Compose([
     transforms.Resize((15, 15)),  # Resize to 15x15
-    transforms.ToTensor()
+    transforms.ToTensor(),
+    transforms.Lambda(lambda x: (x > 0.5).float())  # Binarize image
 ])
 
 train_dataset = torchvision.datasets.MNIST(root="./data", train=True, transform=transform, download=True)
@@ -18,6 +19,10 @@ train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
 test_dataset = torchvision.datasets.MNIST(root="./data", train=False, transform=transform, download=True)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
+print(torch.cuda.is_available())  # Should return True
+print(torch.cuda.device_count())  # Should be at least 1
+print(torch.cuda.get_device_name(0))  # Should print "GeForce GTX 1660 Ti"
 
 # Initialize model, loss function, and optimizer
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
