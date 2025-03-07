@@ -26,16 +26,16 @@ def show_mnist_samples(target_label, num_samples=5):
             break  # Stop when we collect enough samples
 
     # Plot images
-    # fig, axes = plt.subplots(1, num_samples, figsize=(num_samples * 2, 2))
-    # for i in range(num_samples):
-    #     axes[i].imshow(images[i].squeeze(), cmap="gray")
-    #     axes[i].axis("off")
-    #     axes[i].set_title(f"Label: {labels[i]}")
+    fig, axes = plt.subplots(1, num_samples, figsize=(num_samples * 2, 2))
+    for i in range(num_samples):
+        axes[i].imshow(images[i].squeeze(), cmap="gray")
+        axes[i].axis("off")
+        axes[i].set_title(f"Label: {labels[i]}")
     
-    # plt.show()
+    plt.show()
     return images
 
-samples = show_mnist_samples(target_label=0, num_samples=5)
-sample = (samples[0].numpy().squeeze() * 1).astype(int)
-print(sample)
-pd.DataFrame(sample).to_csv("digit0.csv", index=False, header=False)
+samples = show_mnist_samples(target_label=0, num_samples=20)
+# sample = (samples[0].numpy().squeeze() * 1).astype(int)
+# print(sample)
+# pd.DataFrame(sample).to_csv("digit4.csv", index=False, header=False)

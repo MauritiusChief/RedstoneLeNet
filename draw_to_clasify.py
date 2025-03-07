@@ -25,25 +25,39 @@ def draw_digit():
     fig, ax = plt.subplots(figsize=(3, 3))
     ax.set_xticks([])  # Hide axes
     ax.set_yticks([])
-    canvas = np.ones((15, 15))  # Create a blank canvas
-    drawing = []
+    canvas = np.zeros((15, 15))  # Create a blank canvas
+    drawing = False  # Flag to track when to draw
+
+    def on_press(event):
+        """Activate drawing when the mouse button is pressed."""
+        nonlocal drawing
+        drawing = True
+
+    def on_release(event):
+        """Stop drawing when the mouse button is released."""
+        nonlocal drawing
+        drawing = False
 
     def on_draw(event):
-        if event.xdata is not None and event.ydata is not None:
+        """Draw only when the mouse button is held down."""
+        if drawing and event.xdata is not None and event.ydata is not None:
             x, y = int(event.xdata), int(event.ydata)
-            canvas[y - 1:y + 1, x - 1:x + 1] = 0  # Simulate brush effect
-            drawing.append((x, y))
-            ax.imshow(canvas, cmap="gray")
-            plt.draw()
+            if 0 <= x < 15 and 0 <= y < 15:  # Ensure within bounds
+                canvas[y, x] = 1  # Simulate brush effect
+                ax.imshow(canvas, cmap="gray")
+                plt.draw()
 
+    fig.canvas.mpl_connect("button_press_event", on_press)
+    fig.canvas.mpl_connect("button_release_event", on_release)
     fig.canvas.mpl_connect("motion_notify_event", on_draw)
     plt.show()
 
     return canvas
 
 # Draw number
-# image_array = draw_digit()
-image_array = pd.read_csv("digit.csv", header=None).values
+image_array = draw_digit()
+image_array[0,0] = 0
+# image_array = pd.read_csv("digit4.csv", header=None).values
 print(image_array)
 
 # Convert drawn image to PIL Image
