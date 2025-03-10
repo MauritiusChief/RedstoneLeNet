@@ -125,7 +125,7 @@ class RedstoneFloat:
         M_repr = format_dict(self.M, -1, -1)
         E_repr = format_dict(self.E, 0, 1)
 
-        return f"RedstoneFloat: s= {self.s}\nM=\n\t{M_repr}\nE=\n\t{E_repr}"
+        return f"RedstoneFloat: s= \033[33m{self.s}\033[0m\nM=\n\t{M_repr}\nE=\n\t{E_repr}"
     
 
 def exponent_add(e_a: dict[str: int], e_b: dict[str: int]) -> dict[str: int]:
@@ -136,7 +136,7 @@ def exponent_add(e_a: dict[str: int], e_b: dict[str: int]) -> dict[str: int]:
     next_colors = ["orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", ""]
 
     result = {color: 1 for color in colors} # result 提前填充补码以减去偏移量 1
-    
+
     for color in colors:
         result[color] += (e_a.get(color, 0) + e_b.get(color, 0)) # 模拟直接混合到一个箱子里
 
@@ -243,13 +243,13 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
 
 # 测试乘法
 print("### a ###")
-a = RedstoneFloat.from_float(1.4271e+00)
-# a = RedstoneFloat.from_float(0.75)
+# a = RedstoneFloat.from_float(1.4271e+00)
+a = RedstoneFloat.from_float(-0.421875)
 print(a)
 
 print("### b ###")
-b = RedstoneFloat.from_float(1.1470e-05)
-# b = RedstoneFloat.from_float(0.421875)
+b = RedstoneFloat.from_float(-1.1470e-05)
+# b = RedstoneFloat.from_float(0.75)
 print(b)
 
 print("### r ###")
