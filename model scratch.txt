@@ -1,0 +1,9 @@
+Input 15x15
+  ↓  3x3 kernel, 2 stride
+Convolutional layer 7x7
+  ↓  ReLU, cut off x>1
+1st FC layer 30
+  ↓  tanh
+2nd FC layer 30
+  ↓  tanh
+3rd FC layer 10

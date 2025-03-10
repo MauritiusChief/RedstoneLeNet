@@ -9,8 +9,12 @@ model.eval()
 # Print the model structure
 print(model)
 
-# Print the first few weight values of the first layer
+torch.set_printoptions(threshold=torch.inf)
+f = open("model_weights.txt", "w")
 for name, param in model.named_parameters():
-    print(f"Layer: {name} | Shape: {param.shape}")
-    print(param[:5])  # Print first few values
-    break  # Remove this to see all layers
+    # print(f"层: {name} | 形状: {param.shape}")
+    # print(param.data)
+    f.write(f"\n[LAYER]: {name} | [SHAPE]: {param.shape}\n")
+    f.write(str(param.data))
+
+f.close()
