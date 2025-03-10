@@ -130,20 +130,22 @@ class RedstoneFloat:
 
 def exponent_add(e_a: dict[str: int], e_b: dict[str: int]) -> dict[str: int]:
     """模拟指数部分相加"""
-    # colors依次表示 2^0=1, 2^1=2, 2^2=4, ..., 2^(7)
+    # colors依次表示 2^(0)=1, 2^(1)=2, 2^(2)=4, ..., 2^(7)
     # 但有偏移量 -1，且需要的指数多为负数，所以最终运算时应该是2^(1-value)
     colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray"]
     next_colors = ["orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", ""]
-    result = {color: 0 for color in colors}
-    for color in colors:
-        result[color] = e_a.get(color, 0) + e_b.get(color, 0) # 模拟直接混合到一个箱子里
+
+    result = {color: 1 for color in colors} # result 提前填充补码以减去偏移量 1
     
+    for color in colors:
+        result[color] += (e_a.get(color, 0) + e_b.get(color, 0)) # 模拟直接混合到一个箱子里
+
     # 实际过程中应该是8次有序的独立的检测
     for i, color in enumerate(colors):
         while result[color] >= 2: # 存量转信器发出信号
             result[color] -= 2 # 信号指示黄铜漏斗漏掉2个物品
             next_color = next_colors[i]
-            result[next_color] += 1 # 信号指示投入一个物品表示进位
+            if next_color: result[next_color] += 1 # 信号指示投入一个物品表示进位
     return result
 
 def mantissa_multiply(m_a: dict[str: int], m_b: dict[str: int]) -> dict[str: int]:
@@ -167,12 +169,16 @@ def mantissa_multiply(m_a: dict[str: int], m_b: dict[str: int]) -> dict[str: int
                 if count > 0:
                     result[colors[j]] = result.get(colors[j]) + count
             temp_slots = [0] * 16 # 清空位移装置
+    # print(f"result: {result}")
+
+    rev_colors = colors[::-1]
     # 实际过程中应该是16次有序的独立的检测
-    for i, color in enumerate(colors):
+    for i, color in enumerate(rev_colors):
         while result[color] >= 2: # 存量转信器发出信号
             result[color] -= 2 # 信号指示黄铜漏斗漏掉2个物品
-            next_color = next_colors[i]
+            next_color = next_colors[15-i]
             result[next_color] = result.get(next_color) + 1 # 信号指示投入一个物品表示进位
+    # print(f"result: {result}")
     return result
 
 def multiplying(a: RedstoneFloat, b: RedstoneFloat):
@@ -207,14 +213,14 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
     while True:
         if temp_slots_M[0] > 0: break
         temp_slots_M = temp_slots_M[1:] + [0] # 最前端的物品被丢弃
-        temp_slots_E = [0] + temp_slots_E[:-1] # 负数部分向右位移，最末端的物品被丢弃
+        temp_slots_E = [1] + temp_slots_E[:-1] # 负数部分向右位移，最末端的物品被丢弃
     # 只检测位移装置中各槽位的物品数量，生成新的物品列，扔进结果箱子
     for j, count in enumerate(temp_slots_M):
         if count > 0:
-            new_M[mantissa_colors[j]] = new_M.get(mantissa_colors[j]) + count
+            new_M[mantissa_colors[j]] += count
     for j, count in enumerate(temp_slots_E):
         if count > 0:
-            new_E[exponent_colors[j]] = new_E.get(exponent_colors[j]) + count
+            new_E[exponent_colors[j]] += count
     temp_slots_M = [0] * 16 # 清空位移装置
     temp_slots_E = [0] * 8 # 清空位移装置
     
@@ -226,20 +232,27 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
 # print(exponent_add(e_a, e_b))
 
 # 测试to_float和from_float
+# a = RedstoneFloat.from_float(1.4271e+00)
+# # a = RedstoneFloat.from_float(0.75)
+# print(a)
+# print(a.to_float())
+# b = RedstoneFloat.from_float(1.1470e-05)
+# # b = RedstoneFloat.from_float(0.421875)
+# print(b)
+# print(b.to_float())
+
+# 测试乘法
+print("### a ###")
 a = RedstoneFloat.from_float(1.4271e+00)
 # a = RedstoneFloat.from_float(0.75)
 print(a)
-print(a.to_float())
+
+print("### b ###")
 b = RedstoneFloat.from_float(1.1470e-05)
 # b = RedstoneFloat.from_float(0.421875)
 print(b)
-print(b.to_float())
 
-# 测试乘法
-# a = RedstoneFloat.from_float(0.75)
-# print(a)
-# b = RedstoneFloat.from_float(1.125)
-# print(b)
-# r = multiplying(a, b)
-# print(r)
-# print(r.to_float())
+print("### r ###")
+r = multiplying(a, b)
+print(r)
+print(r.to_float())
