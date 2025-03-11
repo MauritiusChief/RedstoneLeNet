@@ -34,20 +34,20 @@ class RedstoneFloat:
         value = 0
         colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray"]
         # 依次表示 2^0=1, 2^1=2, 2^2=4, ..., 2^(7)=128
-        # 但有偏移量 -1，且需要的指数多为负数，所以最终运算时应该是2^(2-value)
+        # 但有偏移量 -2，且需要的指数多为负数，所以最终运算时应该是2^(2-value)
         for i, color in enumerate(colors):
             if self.E[color] > 0:
                 value += 2 ** (i)
-        # 例如：假如有 white, orange, magenta, 则 value = 1 + 2 + 4 = 7，实际表示的指数为 2^(1-7) = 2^(-6)
-        # 最大可表示的数为 2^(1-0) = 2^1 = 2，最小可表示的数为 2^( 1 - (1+2+4+8...+128) )
+        # 例如：假如有 white, orange, magenta, 则 value = 1 + 2 + 4 = 7，实际表示的指数为 2^(2-7) = 2^(-5)
+        # 最大可表示的数为 2^(2-0) = 2^2 = 4，最小可表示的数为 2^( 2 - (1+2+4+8...+128) )
         return value
     
     def to_float(self) -> float:
         sign = (-1) ** (self.s == 'obsidian')
         mantissa = self._decode_mantissa()
         exponent = self._decode_exponent()
-        print(f"sign: {sign}, mantissa: {mantissa}, exponent: {-exponent}(+1)")
-        return sign * mantissa * (2**(1-exponent))
+        print(f"sign: {sign}, mantissa: {mantissa}, exponent: {-exponent}(+2)")
+        return sign * mantissa * (2**(2-exponent))
 
     @staticmethod
     def from_float(value: float) -> 'RedstoneFloat':
@@ -74,8 +74,8 @@ class RedstoneFloat:
         if mantissa >= 1:
             mantissa /= 2
             exponent += 1
-        exponent -= 1  # 调整指数偏移量
-        print(f"exponent: {exponent}(+1), mantissa: {mantissa}")
+        exponent -= 2  # 调整指数偏移量
+        print(f"exponent: {exponent}(+2), mantissa: {mantissa}")
 
         # 尾数转换为16色羊毛
         mantissa_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
@@ -93,7 +93,7 @@ class RedstoneFloat:
         # 指数转换为8色混凝土
         exponent_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray"]
         # 依次表示 1, 2, 4, ..., 2^(7)
-        # 但有偏移量 -1，且需要的指数多为负数，所以最终运算时应该是2^(1-value)
+        # 但有偏移量 -2，且需要的指数多为负数，所以最终运算时应该是2^(2-value)
         rev_exponent_colors = exponent_colors[::-1]
 
         E = {color: 0 for color in exponent_colors}
@@ -131,11 +131,13 @@ class RedstoneFloat:
 def exponent_add(e_a: dict[str: int], e_b: dict[str: int]) -> dict[str: int]:
     """模拟指数部分相加"""
     # colors依次表示 2^(0)=1, 2^(1)=2, 2^(2)=4, ..., 2^(7)
-    # 但有偏移量 -1，且需要的指数多为负数，所以最终运算时应该是2^(1-value)
+    # 但有偏移量 -2，且需要的指数多为负数，所以最终运算时应该是2^(2-value)
     colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray"]
     next_colors = ["orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", ""]
 
-    result = {color: 1 for color in colors} # result 提前填充补码以减去偏移量 1
+    # result 提前填充补码以减去偏移量 2
+    result = {color: 1 for color in colors}
+    result["white"] = 0
 
     for color in colors:
         result[color] += (e_a.get(color, 0) + e_b.get(color, 0)) # 模拟直接混合到一个箱子里
@@ -244,12 +246,14 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
 # 测试乘法
 print("### a ###")
 # a = RedstoneFloat.from_float(1.4271e+00)
-a = RedstoneFloat.from_float(-0.421875)
+# a = RedstoneFloat.from_float(-0.421875)
+a = RedstoneFloat.from_float(1.7347)
 print(a)
 
 print("### b ###")
 b = RedstoneFloat.from_float(-1.1470e-05)
 # b = RedstoneFloat.from_float(0.75)
+# b = RedstoneFloat.from_float(1.7347)
 print(b)
 
 print("### r ###")
