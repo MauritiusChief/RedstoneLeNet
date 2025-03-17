@@ -143,10 +143,9 @@ def exponent_add(e_a: dict[str: int], e_b: dict[str: int]) -> dict[str: int]:
         result[color] += (e_a.get(color, 0) + e_b.get(color, 0)) # 模拟直接混合到一个箱子里
 
     # 实际过程中应该是8次有序的独立的检测
-    for i, color in enumerate(colors):
+    for color, next_color in zip(colors, next_colors):
         while result[color] >= 2: # 存量转信器发出信号
             result[color] -= 2 # 信号指示黄铜漏斗漏掉2个物品
-            next_color = next_colors[i]
             if next_color: result[next_color] += 1 # 信号指示投入一个物品表示进位
     return result
 
@@ -155,31 +154,42 @@ def mantissa_multiply(m_a: dict[str: int], m_b: dict[str: int]) -> dict[str: int
     # colors依次表示 2^(-1), 2^(-2), 2^(-3), ..., 2^(-16)
     colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", 
                   "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"]
+    shift_next_colors = ["orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", 
+                  "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black", ""] # 位移装置用
     next_colors = ["", "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", 
                   "light_gray", "cyan", "purple", "blue", "brown", "green", "red"]
+    
     result = {color: 0 for color in colors}
+    shift_device = {color: 0 for color in colors} # 模拟位移装置
+    temp_shift_device = {color: 0 for color in colors} # 模拟不被存量转信器检测时的位移装置
     # 实际过程中应该是16次有序的独立的检测
     for i, color in enumerate(colors):
         shift = i + 1
         if m_a[color] > 0:
-            temp_slots = [count for count in m_b.values()] # 模拟把m_b物品分配到位移装置中
+            shift_device = m_b.copy() # 模拟把m_b物品分配到位移装置中，实际过程中应该是16个检测装置
             # 执行shift次位移
             for _ in range(shift):
-                temp_slots = [0] + temp_slots[:-1] # 最末端的物品被丢弃
-            # 只检测位移装置中各槽位的物品数量，生成新的物品列，扔进结果箱子
-            for j, count in enumerate(temp_slots):
-                if count > 0:
-                    result[colors[j]] = result.get(colors[j]) + count
-            temp_slots = [0] * 16 # 清空位移装置
+                # 类似，实际过程中应该是16次有序的独立的检测
+                for color, shift_next_color in zip(colors, shift_next_colors):
+                    if shift_device[color] >= 1: # 存量转信器发出信号
+                        # 同时给予黄铜漏斗一个短暂解锁信号
+                        shift_device[color] -= 1 # 信号指示黄铜漏斗漏掉1个物品
+                        if shift_next_color: temp_shift_device[shift_next_color] += 1 # 信号指示呼叫一个物品进行位移，由于解锁信号很短，呼叫的物品不允许进入位移装置
+                        # print(f"temp_shift_device: {temp_shift_device}")
+                # 解锁信号结束，等待呼叫的物品进入位移装置，以准备下一次位移
+                for color in colors:
+                    shift_device[color] += temp_shift_device[color]
+                    temp_shift_device[color] = 0 # 清空临时位移装置
+                # print(f"shift_device: {shift_device}")
+            for color in colors:
+                result[color] += shift_device[color] # 模拟位移结果添加到结果箱
     # print(f"result: {result}")
 
-    rev_colors = colors[::-1]
     # 实际过程中应该是16次有序的独立的检测
-    for i, color in enumerate(rev_colors):
+    for color, next_color in zip(colors[::-1], next_colors[::-1]): # 注意此处是从末往前进位
         while result[color] >= 2: # 存量转信器发出信号
             result[color] -= 2 # 信号指示黄铜漏斗漏掉2个物品
-            next_color = next_colors[15-i]
-            result[next_color] = result.get(next_color) + 1 # 信号指示投入一个物品表示进位
+            if next_color: result[next_color] += 1 # 信号指示投入一个物品表示进位
     # print(f"result: {result}")
     return result
 
@@ -201,7 +211,7 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
     # 计算尾数部分（位移加法乘法）
     raw_M = mantissa_multiply(a.M, b.M)
 
-    # return RedstoneFloat(new_s, raw_M, raw_E)
+    return RedstoneFloat(new_s, raw_M, raw_E)
 
     mantissa_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
                     "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"]
@@ -245,15 +255,18 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
 
 # 测试乘法
 print("### a ###")
-# a = RedstoneFloat.from_float(1.4271e+00)
+a = RedstoneFloat.from_float(1.4271e+00)
 # a = RedstoneFloat.from_float(-0.421875)
-a = RedstoneFloat.from_float(1.7347)
+# a = RedstoneFloat.from_float(0b0.11011) # 0.84375
+# a = RedstoneFloat.from_float(1.7347)
+# a = RedstoneFloat.from_float((1/2) * 2**(-0b01001010 + 2))
 print(a)
 
 print("### b ###")
 b = RedstoneFloat.from_float(-1.1470e-05)
-# b = RedstoneFloat.from_float(0.75)
+# b = RedstoneFloat.from_float(0b11) # 0.75
 # b = RedstoneFloat.from_float(1.7347)
+# b = RedstoneFloat.from_float((1/2) * 2**(-0b01101011 + 2))
 print(b)
 
 print("### r ###")
