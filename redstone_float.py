@@ -255,16 +255,16 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
 
 # 测试乘法
 print("### a ###")
-a = RedstoneFloat.from_float(1.4271e+00)
+# a = RedstoneFloat.from_float(1.4271e+00)
 # a = RedstoneFloat.from_float(-0.421875)
-# a = RedstoneFloat.from_float(0b0.11011) # 0.84375
+a = RedstoneFloat.from_float((0b11011/2**5) * 2**( -0b00000111 +2)) # 0.84375 * 2^(-5)
 # a = RedstoneFloat.from_float(1.7347)
 # a = RedstoneFloat.from_float((1/2) * 2**(-0b01001010 + 2))
 print(a)
 
 print("### b ###")
-b = RedstoneFloat.from_float(-1.1470e-05)
-# b = RedstoneFloat.from_float(0b11) # 0.75
+# b = RedstoneFloat.from_float(-1.1470e-05)
+b = RedstoneFloat.from_float((0b11/2**2) * 2**( -0b00000100 +2)) # 0.75 * 2^(-2)
 # b = RedstoneFloat.from_float(1.7347)
 # b = RedstoneFloat.from_float((1/2) * 2**(-0b01101011 + 2))
 print(b)
