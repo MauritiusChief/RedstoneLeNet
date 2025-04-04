@@ -58,7 +58,7 @@ def draw_digit():
 image_array = draw_digit()
 image_array[0,0] = 0
 # image_array = pd.read_csv("digit4.csv", header=None).values
-print(image_array)
+# print(image_array)
 
 # Convert drawn image to PIL Image
 image_pil = Image.fromarray((image_array * 255).astype(np.uint8))  # Convert back to 0-255 range
