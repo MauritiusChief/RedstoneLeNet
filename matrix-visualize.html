@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Step-by-Step Matrix Multiplication</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    textarea { width: 300px; height: 80px; font-family: monospace; }
+    button { margin: 10px 5px; padding: 5px 15px; }
+    .matrix-container { display: flex; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+    .matrix { display: inline-grid; gap: 5px; margin: 0 20px; }
+    .cell {
+      width: 40px; height: 40px;
+      display: flex; justify-content: center; align-items: center;
+      border: 2px solid #ccc;
+      padding: 10px;
+    }
+    .highlight-row { background: #ffefba; }
+    .highlight-col { background: #bfe7ff; }
+    .highlight-a { border: 2px solid orange; background: #ffe58f !important; }
+    .highlight-b { border: 2px solid royalblue; background: #91d5ff !important; }
+    .result-cell { background: #d9f7be; }
+    .highlight-result { border: 2px solid green; background: #b7eb8f !important; }
+    .symbol { font-size: 24px; align-self: center; }
+    #stepDetails {
+      margin-top: 15px; font-family: monospace;
+      white-space: pre-wrap; background: #f6f6f6;
+      padding: 10px; border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h2>Step-by-Step Matrix Multiplication</h2>
+  <label>Matrix A:</label><br />
+  <textarea id="matrixA">[[1,2],[3,4],[5,6]]</textarea><br />
+  <label>Matrix B:</label><br />
+  <textarea id="matrixB">[[7,8,9],[10,11,12]]</textarea><br />
+  <button onclick="initComputation()">Load Matrices</button>
+  <button onclick="nextStep()">Next Step</button>
+
+  <div class="matrix-container" id="display"></div>
+  <div id="stepDetails"></div>
+
+  <script>
+    let A = [], B = [], result = [];
+    let m = 0, n = 0, p = 0;
+    let i = 0, j = 0, k = 0;
+
+    function parseMatrix(text) {
+      try {
+        const matrix = JSON.parse(text);
+        if (!Array.isArray(matrix) || !Array.isArray(matrix[0])) throw "Invalid format";
+        return matrix;
+      } catch {
+        alert("Invalid matrix format. Use nested arrays like [[1,2],[3,4]]");
+        return null;
+      }
+    }
+
+    function createMatrixElement(matrix, options = {}, matrixType = '') {
+      // console.log(matrixType)
+      // console.log(options)
+      const rows = matrix.length;
+      const cols = matrix[0].length;
+      const div = document.createElement('div');
+      div.className = 'matrix';
+      div.style.gridTemplateColumns = `repeat(${cols}, auto)`;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+
+          if (matrixType === 'A' && options.row === row) cell.classList.add('highlight-row');
+          if (matrixType === 'B' && options.col === col) cell.classList.add('highlight-col');
+
+          if (matrixType === 'A' && row === options.aRow && col === options.aCol)
+            cell.classList.add('highlight-a');
+          if (matrixType === 'B' && row === options.bRow && col === options.bCol)
+            cell.classList.add('highlight-b');
+          if (matrixType === 'R' && row === options.rRow && col === options.rCol)
+            cell.classList.add('highlight-result', 'result-cell');
+          if (matrixType === 'R') cell.classList.add('result-cell');
+
+          cell.textContent = Number.isInteger(matrix[row][col]) 
+            ? matrix[row][col] 
+            : matrix[row][col]?.toExponential(4).replace('e', '\ne');
+          div.appendChild(cell);
+        }
+      }
+      return div;
+    }
+
+    function symbol(text) {
+      const span = document.createElement('div');
+      span.className = 'symbol';
+      span.textContent = text;
+      return span;
+    }
+
+    function showMatrices() {
+      const display = document.getElementById('display');
+      display.innerHTML = '';
+
+      const highlight = {
+        row: i,
+        col: j,
+        aRow: i,
+        aCol: k,
+        bRow: k,
+        bCol: j,
+        rRow: i,
+        rCol: j
+      };
+
+      display.appendChild(createMatrixElement(A, highlight, 'A'));
+      display.appendChild(symbol('×'));
+      display.appendChild(createMatrixElement(B, highlight, 'B'));
+      display.appendChild(symbol('='));
+      display.appendChild(createMatrixElement(result, highlight, 'R'));
+    }
+
+    function initComputation() {
+      A = parseMatrix(document.getElementById('matrixA').value);
+      B = parseMatrix(document.getElementById('matrixB').value);
+      if (!A || !B) return;
+
+      m = A.length;
+      n = A[0].length;
+      p = B[0].length;
+
+      if (B.length !== n) {
+        alert(`Incompatible matrix dimensions: A is ${m}x${n}, B is ${B.length}x${p}`);
+        return;
+      }
+
+      result = Array.from({ length: m }, () => Array(p).fill(0));
+      i = 0;
+      j = 0;
+      k = 0;
+      document.getElementById('stepDetails').textContent = "Ready. Click 'Next Step' to begin.";
+      showMatrices();
+    }
+
+    function nextStep() {
+      if (i >= m) {
+        document.getElementById('stepDetails').textContent = "Multiplication complete!";
+        return;
+      }
+
+      const a = A[i][k];
+      const b = B[k][j];
+      const prod = a * b;
+      result[i][j] += prod;
+
+      const detailText = `Calculating result[${i}][${j}]... Step k=${k}:\n` +
+                         `A[${i}][${k}] × B[${k}][${j}] = ${a} × ${b} = ${prod}\n` +
+                         `Current sum: ${result[i][j]}`;
+      document.getElementById('stepDetails').textContent = detailText;
+      showMatrices();
+
+      k++;
+      if (k >= n) {
+        k = 0;
+        j++;
+        if (j >= p) {
+          j = 0;
+          i++;
+        }
+      }
+    }
+
+    document.addEventListener('keydown', function(event) {
+      if (event.code === 'Space') {
+        event.preventDefault(); // prevent page from scrolling
+        nextStep();
+      }
+    });
+  </script>
+</body>
+</html>
