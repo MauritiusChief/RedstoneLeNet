@@ -2,77 +2,61 @@ import numpy as np
 import torchvision.transforms as transforms
 from skimage.morphology import skeletonize
 
+def shift_image(img, dx, dy):
+    """Shift image by dx (columns) and dy (rows), fill new area with 0."""
+    shifted = np.zeros_like(img)
+    if dy >= 0:
+        rows_src = slice(0, img.shape[0] - dy)
+        rows_dst = slice(dy, img.shape[0])
+    else:
+        rows_src = slice(-dy, img.shape[0])
+        rows_dst = slice(0, img.shape[0] + dy)
+
+    if dx >= 0:
+        cols_src = slice(0, img.shape[1] - dx)
+        cols_dst = slice(dx, img.shape[1])
+    else:
+        cols_src = slice(-dx, img.shape[1])
+        cols_dst = slice(0, img.shape[1] + dx)
+
+    shifted[rows_dst, cols_dst] = img[rows_src, cols_src]
+    return shifted
+
 def custom_skeletonize(binary):
-    # 复制输入，避免原地修改
-    output = binary.copy()
-    H, W = binary.shape
+    # Step 1: Skeletonize the binary image
+    skeleton = skeletonize(binary).astype(np.uint8)
 
-    for y in range(2, H - 2):
-        for x in range(2, W - 2):
-            if not binary[y, x]:
-                continue
+    # Step 2: Generate 3 slightly thickened variants by copying pixels
+    variant1 = skeleton | shift_image(skeleton, -1, 0)  # left
+    variant2 = skeleton | shift_image(skeleton, 0, 1)   # down
+    variant3 = skeleton | shift_image(skeleton, -1, 0) \
+                         | shift_image(skeleton, 0, 1) \
+                         | shift_image(skeleton, -1, 1)  # left, down, left-down
+    
+    variants = [variant1, variant2, variant3]
 
-            up     = binary[y - 1, x] and binary[y - 2, x]
-            down   = binary[y + 1, x] and binary[y + 2, x]
-            left   = binary[y, x - 1] and binary[y, x - 2]
-            right  = binary[y, x + 1] and binary[y, x + 2]
+    # Step 3: Random cut and merge
+    h, w = skeleton.shape
+    mid_x = np.random.randint(w // 3, 2 * w // 3)
+    mid_y = np.random.randint(h // 3, 2 * h // 3)
 
-            # 规则 1: 四个方向全是 1，则中心设为 0
-            if np.all([up, down, left, right]):
-                output[y, x] = 0
-                continue
+    new_img = np.zeros_like(skeleton)
 
-            # 规则 2：检查四个主方向（上下左右）
-            up_zero = not binary[y - 1, x]
-            down_zero = not binary[y + 1, x]
-            left_zero = not binary[y, x - 1]
-            right_zero = not binary[y, x + 1]
+    # Define 4 blocks and fill from randomly selected variant
+    new_img[:mid_y, :mid_x] = variants[np.random.randint(3)][:mid_y, :mid_x]       # Top-left
+    new_img[:mid_y, mid_x:] = variants[np.random.randint(3)][:mid_y, mid_x:]       # Top-right
+    new_img[mid_y:, :mid_x] = variants[np.random.randint(3)][mid_y:, :mid_x]       # Bottom-left
+    new_img[mid_y:, mid_x:] = variants[np.random.randint(3)][mid_y:, mid_x:]
 
-            directions = {
-                'up': up,
-                'down': down,
-                'left': left,
-                'right': right,
-            }
-
-            zero_flags = {
-                'up': up_zero,
-                'down': down_zero,
-                'left': left_zero,
-                'right': right_zero,
-            }
-
-            ones = [k for k, v in directions.items() if v]
-            zeros = [k for k, v in zero_flags.items() if v]
-
-            # 斜角只看1格
-            ur = binary[y - 1, x + 1]
-            dr = binary[y + 1, x + 1]
-            dl = binary[y + 1, x - 1]
-            ul = binary[y - 1, x - 1]
-
-            diagonal = {
-                ('up', 'right'): ur,
-                ('right', 'down'): dr,
-                ('down', 'left'): dl,
-                ('left', 'up'): ul
-            }
-
-            if len(ones) == 2 and len(zeros) == 2:
-                for pair, corner in diagonal.items():
-                    if all(d in ones for d in pair) and corner:
-                        output[y, x] = 0
-                        break
-
-    return output
+    return new_img
 
 class SkeletonizeTransform:
     def __call__(self, img):
         # 确保图像是灰度
         img = img.convert('L')
 
-        # Resize 到 15x15（可以改成你想要的大小）
-        img = img.resize((15, 15))
+        # # Resize 到 15x15（可以改成你想要的大小）
+        # img = img.resize((15, 15))
 
         # 转为 numpy 数组
         arr = np.array(img)
@@ -83,7 +67,7 @@ class SkeletonizeTransform:
             arr = arr * (255.0 / max_val)
 
         # 二值化
-        binary = arr > 96  # True/False array
+        binary = arr > 128  # True/False array
 
         # 执行骨架化（skeletonize expects boolean array）
         skeleton = custom_skeletonize(binary)

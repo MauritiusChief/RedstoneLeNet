@@ -1,8 +1,5 @@
 import math
-import numpy as np
-import pandas as pd
 import torchvision
-import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 
 # Load MNIST dataset
@@ -46,7 +43,7 @@ def show_mnist_samples(target_label, skip_num = 0, num_samples=5, cols=7):
     plt.show()
     return images
 
-samples = show_mnist_samples(target_label=0, skip_num=21*0, num_samples=21)
+samples = show_mnist_samples(target_label=7, skip_num=21*0, num_samples=21)
 # sample = (samples[0].numpy().squeeze() * 1).astype(int)
 # print(sample)
 # pd.DataFrame(sample).to_csv("digit4.csv", index=False, header=False)
