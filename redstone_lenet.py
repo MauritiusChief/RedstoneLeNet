@@ -33,7 +33,7 @@ def custom_skeletonize(binary):
                          | shift_image(skeleton, 0, 1) \
                          | shift_image(skeleton, -1, 1)  # left, down, left-down
     
-    variants = [variant1, variant2, variant3]
+    variants = [variant1, variant2, variant1, variant2, variant3] # 减小变种3出现的概率
 
     # Step 3: Random cut and merge
     h, w = skeleton.shape
@@ -43,10 +43,10 @@ def custom_skeletonize(binary):
     new_img = np.zeros_like(skeleton)
 
     # Define 4 blocks and fill from randomly selected variant
-    new_img[:mid_y, :mid_x] = variants[np.random.randint(3)][:mid_y, :mid_x]       # Top-left
-    new_img[:mid_y, mid_x:] = variants[np.random.randint(3)][:mid_y, mid_x:]       # Top-right
-    new_img[mid_y:, :mid_x] = variants[np.random.randint(3)][mid_y:, :mid_x]       # Bottom-left
-    new_img[mid_y:, mid_x:] = variants[np.random.randint(3)][mid_y:, mid_x:]
+    new_img[:mid_y, :mid_x] = variants[np.random.randint(5)][:mid_y, :mid_x]       # Top-left
+    new_img[:mid_y, mid_x:] = variants[np.random.randint(5)][:mid_y, mid_x:]       # Top-right
+    new_img[mid_y:, :mid_x] = variants[np.random.randint(5)][mid_y:, :mid_x]       # Bottom-left
+    new_img[mid_y:, mid_x:] = variants[np.random.randint(5)][mid_y:, mid_x:]
 
     return new_img
 
