@@ -51,23 +51,23 @@ def load_weights(filepath):
 
 def predict(binary_image, weight_dict):
     """
-    binary_image: 28x28 list of 0/1
+    binary_image: 15x15 list of 0/1
     weight_dict: torch.load from redstone_lenet.pth
     """
     # 转换为 Tensor 格式
-    x = torch.tensor(binary_image, dtype=torch.float32).unsqueeze(0)  # shape [1, 28, 28]
+    x = torch.tensor(binary_image, dtype=torch.float32).unsqueeze(0)  # shape [1, 15, 15]
 
     # ===== Conv Layer =====
     w_conv = weight_dict['conv1.weight']  # shape [1,1,3,3]
     b_conv = weight_dict['conv1.bias']    # shape [1]
-    x = conv2d_manual(x, w_conv, b_conv, stride=2)  # → [1, 13, 13]
+    x = conv2d_manual(x, w_conv, b_conv, stride=2)  # → [1, 7, 7]
     x = relu_cut(x)
 
     # ===== Flatten =====
-    x = flatten(x)  # shape [169]
+    x = flatten(x)  # shape [49]
 
     # ===== FC1 =====
-    w1 = weight_dict['fc1.weight']  # [30, 169]
+    w1 = weight_dict['fc1.weight']  # [30, 49]
     b1 = weight_dict['fc1.bias']    # [30]
     x = linear_manual(x, w1, b1)
     x = tanh(x)

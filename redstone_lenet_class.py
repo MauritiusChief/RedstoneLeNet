@@ -6,8 +6,8 @@ class RedstoneLeNet(nn.Module):
     def __init__(self):
         super(RedstoneLeNet, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=1, kernel_size=3, stride=2)  # 3x3 kernel, stride 2
-        # self.fc1 = nn.Linear(7 * 7, 30)
-        self.fc1 = nn.Linear(13 * 13, 30)
+        self.fc1 = nn.Linear(7 * 7, 30)
+        # self.fc1 = nn.Linear(13 * 13, 30)
         self.fc2 = nn.Linear(30, 30)
         self.fc3 = nn.Linear(30, 10)
         self.relu = nn.ReLU()

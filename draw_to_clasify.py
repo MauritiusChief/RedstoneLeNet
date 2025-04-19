@@ -15,7 +15,7 @@ def draw_digit():
     fig, ax = plt.subplots(figsize=(3, 3))
     ax.set_xticks([])  # Hide axes
     ax.set_yticks([])
-    canvas = np.zeros((28, 28))  # Create a blank canvas
+    canvas = np.zeros((15, 15))  # Create a blank canvas
     drawing = False  # Flag to track when to draw
 
     def on_press(event):
@@ -32,7 +32,7 @@ def draw_digit():
         """Draw only when the mouse button is held down."""
         if drawing and event.xdata is not None and event.ydata is not None:
             x, y = int(event.xdata), int(event.ydata)
-            if 0 <= x < 28 and 0 <= y < 28:  # Ensure within bounds
+            if 0 <= x < 15 and 0 <= y < 15:  # Ensure within bounds
                 canvas[y, x] = 1  # Simulate brush effect
                 ax.imshow(canvas, cmap="gray")
                 plt.draw()
@@ -45,15 +45,15 @@ def draw_digit():
     return canvas
 
 # Draw number
-image_array = pd.read_csv("pre_draw/dig6.csv", header=None).values
-# image_array = draw_digit()
-# image_array[0,0] = 0
+# image_array = pd.read_csv("pre_draw/dig6.csv", header=None).values
+image_array = draw_digit()
+image_array[0,0] = 0
 
 # print(image_array)
-# with open('pre_draw/temp.csv', 'w', newline='') as csvfile:
-#     spamwriter = csv.writer(csvfile, quotechar='|', quoting=csv.QUOTE_MINIMAL)
-#     for row in image_array:
-#         spamwriter.writerow([int(i) for i in row])
+with open('pre_draw/temp.csv', 'w', newline='') as csvfile:
+    spamwriter = csv.writer(csvfile, quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    for row in image_array:
+        spamwriter.writerow([int(i) for i in row])
 
 weights = load_weights("redstone_lenet.pth")
 # print(weights.keys())
