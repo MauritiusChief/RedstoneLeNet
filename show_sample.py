@@ -5,6 +5,11 @@ import matplotlib.pyplot as plt
 # Load MNIST dataset
 from redstone_lenet import transform
 
+# from torchvision.transforms import transforms
+# transform = transforms.Compose([
+#     transforms.ToTensor(),
+# ])
+
 mnist_dataset = torchvision.datasets.MNIST(root="./data", train=True, transform=transform, download=True)
 
 # Function to find and display images of a specific digit
@@ -40,10 +45,12 @@ def show_mnist_samples(target_label, skip_num = 0, num_samples=5, cols=7):
         axes[j].axis("off")
     
     plt.tight_layout()
+    # plt.savefig(f"pics/dig{target_label}_org_pg{skip_num//28}.png")
+    # plt.savefig(f"pics/preprocess1/dig{target_label}_skl_pg{skip_num//28}.png")
     plt.show()
     return images
 
-samples = show_mnist_samples(target_label=7, skip_num=21*0, num_samples=21)
-# sample = (samples[0].numpy().squeeze() * 1).astype(int)
-# print(sample)
-# pd.DataFrame(sample).to_csv("digit4.csv", index=False, header=False)
+samples = show_mnist_samples(target_label=9, skip_num=28*0, num_samples=28)
+# for d in range(10):
+#     for p in range(1):
+#         show_mnist_samples(target_label=d, skip_num=28*p, num_samples=28)
