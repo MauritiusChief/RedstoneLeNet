@@ -67,7 +67,7 @@ class SkeletonizeTransform:
             arr = arr * (255.0 / max_val)
 
         # 二值化
-        binary = arr > 128  # True/False array
+        binary = arr > 196  # True/False array
 
         # 执行骨架化（skeletonize expects boolean array）
         skeleton = custom_skeletonize(binary)
