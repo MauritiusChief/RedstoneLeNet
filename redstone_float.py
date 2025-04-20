@@ -5,7 +5,7 @@ class RedstoneFloat:
     def __init__(self, s: str, M: dict[str: int], E: dict[str: int]):
         """
         :param s: 符号位，'obsidian' 表示 1，'' 表示 0
-        :param M: 尾数部分，dict 形式的 16 色羊毛
+        :param M: 尾数部分，dict 形式的 16 色
         :param E: 指数部分，dict 形式的 8 色混凝土
         """
         self.s = s  # 直接存储字符串，如 'obsidian' 或 ''
@@ -15,7 +15,7 @@ class RedstoneFloat:
     def _decode_mantissa(self) -> float:
         """
         仅to_float使用
-        将羊毛集合转换为尾数的浮点数表示
+        将集合转换为尾数的浮点数表示
         """
         value = 0
         colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", 
@@ -85,10 +85,10 @@ class RedstoneFloat:
         # 构造 E 字典
         exponent_bits = list(map(int, exponent_str))
         # print(f"exponent_str:{exponent_str}, exponent_bits:{exponent_bits}")
-        exponent_value = sum(b << i for i, b in enumerate(exponent_bits))  # interpret as binary
+        exponent_value = sum(b << i for i, b in enumerate(reversed(exponent_bits)))  # interpret as binary
         # print(f"exponent_value:{exponent_value}")
         E = {}
-        for i, color in enumerate(reversed(exponent_colors)):
+        for i, color in enumerate((exponent_colors)):
             bit = (exponent_value >> i) & 1
             E[color] = bit
 
@@ -140,21 +140,33 @@ class RedstoneFloat:
         return f"{sign_str}.{mantissa_bits}e-{exponent_bits}(+2)"
     
     def __repr__(self):
-        def format_dict(d, start_index):
+        def format_dict(d, start_index, end_index, itemtype):
             items = list(d.items())
+            if (itemtype == "混凝土"): 
+                items = items[::-1]
             lines = []
+            indexes = list(range(start_index, end_index-1, -1))
+            # print(indexes)
             for i in range(0, len(items), 4):
                 row = []
                 for j in range(4):
                     if i + j < len(items):
                         color, value = items[i + j]
-                        index = start_index + (i + j)
-                        row.append(f"{color}({index}): 0" if value == 0 else f"\033[33m{color}({index}): 1\033[0m")
+                        color = localize[color]+itemtype
+                        # print(i+j)
+                        index = indexes[i + j]
+                        row.append(f"{color}({index}): 0   " if value == 0 else f"\033[33m{color}({index}): 1\033[0m   ")
                 lines.append("\t".join(row))
             return "\n\t".join(lines)
 
-        M_repr = format_dict(self.M, -1)
-        E_repr = format_dict(self.E, 0)
-
-        return f"RedstoneFloat: s= \033[33m{self.s}\033[0m\nM=\n\t{M_repr}\nE=\n\t{E_repr}"
+        localize = {"white":"白色", "orange":"橙色", "magenta":"品红色", "light_blue":"淡蓝色", 
+                    "yellow":"黄色", "lime":"黄绿色", "pink":"粉红色", "gray":"灰色", 
+                    "light_gray":"淡灰色", "cyan":"青色", "purple":"紫色", "blue":"蓝色", 
+                    "brown":"棕色", "green":"绿色", "red":"红色", "black":"黑色"}
+        M_repr = format_dict(self.M, -1, -16, "羊毛")
+        E_repr = format_dict(self.E, 7, 0, "混凝土")
+        
+        obsidian = ""
+        if self.s: obsidian = "黑曜石"
+        return f"RedstoneFloat: s= \033[33m{obsidian}\033[0m\nM=\n\t{M_repr}\nE=\n\t{E_repr}"
     
