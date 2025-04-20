@@ -55,8 +55,8 @@ class SkeletonizeTransform:
         # 确保图像是灰度
         img = img.convert('L')
 
-        # # Resize 到 15x15（可以改成你想要的大小）
-        # img = img.resize((15, 15))
+        # Resize 到 15x15（可以改成你想要的大小）
+        img = img.resize((15, 15))
 
         # 转为 numpy 数组
         arr = np.array(img)
@@ -67,7 +67,7 @@ class SkeletonizeTransform:
             arr = arr * (255.0 / max_val)
 
         # 二值化
-        binary = arr > 196  # True/False array
+        binary = arr > 96  # True/False array
 
         # 执行骨架化（skeletonize expects boolean array）
         skeleton = custom_skeletonize(binary)
