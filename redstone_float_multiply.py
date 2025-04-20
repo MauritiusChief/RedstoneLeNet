@@ -62,7 +62,39 @@ def mantissa_multiply(m_a: dict[str: int], m_b: dict[str: int]) -> dict[str: int
     print(f"result: {result}")
     return result
 
-def multiplying(a: rf, b: rf):
+def formating(raw: rf) -> rf:
+    raw_E = raw.E
+    raw_M = raw.M
+
+    mantissa_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
+                        "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"]
+    mantissa_next_colors = ["", "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", 
+                            "light_gray", "cyan", "purple", "blue", "brown", "green", "red"]
+    exponent_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray"]
+    exponent_next_colors = ["orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray", ""]
+    
+    while (raw_M["white"] < 1):
+        epp_flag = False # 指示指数箱增加一位的flag
+        for m_color, m_next in zip(mantissa_colors, mantissa_next_colors):
+            if m_next and raw_M[m_color] > 0: 
+                # print(f"m_next: {m_next}, m_color: {m_color}")
+                raw_M[m_color] -= 1
+                raw_M[m_next] += 1
+                epp_flag = True
+        # 实际过程中通过检测黄铜漏斗漏掉了物品的信号往指数箱中投掷物品
+        if epp_flag: raw_E["white"] += 1
+        # print(f"raw_E[\"white\"] = {raw_E["white"]}")
+    # print(raw_E)
+
+    # 实际过程中应该是8次有序的独立的检测
+    for e_color, e_next in zip(exponent_colors, exponent_next_colors):
+        while raw_E[e_color] >= 2: # 存量转信器发出信号
+            raw_E[e_color] -= 2 # 信号指示黄铜漏斗漏掉2个物品
+            if e_next: raw_E[e_next] += 1 # 信号指示投入一个物品表示进位
+
+    return rf(raw.s, raw_M, raw_E)
+
+def multiplying(a: rf, b: rf, formatting: bool = False) -> rf:
     """实现基于位移加法的浮点数乘法"""
     
     # 模拟计算新符号位
@@ -80,32 +112,11 @@ def multiplying(a: rf, b: rf):
     # 计算尾数部分（位移加法乘法）
     raw_M = mantissa_multiply(a.M, b.M)
 
-    return rf(new_s, raw_M, raw_E)
-
-    mantissa_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
-                    "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"]
-    exponent_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray"]
-    new_M = {color: 0 for color in mantissa_colors}
-    new_E = {color: 0 for color in exponent_colors}
+    if not formatting: return rf(new_s, raw_M, raw_E)
 
     # 尾数部分标准化为0.1xx...，同时调整指数部分
-    temp_slots_M = [count for count in raw_M.values()] # 模拟把raw_M物品分配到位移装置中
-    temp_slots_E = [count for count in raw_E.values()] # 模拟把raw_E物品分配到位移装置中
-    while True:
-        if temp_slots_M[0] > 0: break
-        temp_slots_M = temp_slots_M[1:] + [0] # 最前端的物品被丢弃
-        temp_slots_E = [1] + temp_slots_E[:-1] # 负数部分向右位移，最末端的物品被丢弃
-    # 只检测位移装置中各槽位的物品数量，生成新的物品列，扔进结果箱子
-    for j, count in enumerate(temp_slots_M):
-        if count > 0:
-            new_M[mantissa_colors[j]] += count
-    for j, count in enumerate(temp_slots_E):
-        if count > 0:
-            new_E[exponent_colors[j]] += count
-    temp_slots_M = [0] * 16 # 清空位移装置
-    temp_slots_E = [0] * 8 # 清空位移装置
-    
-    return rf(new_s, new_M, new_E)
+    r = formating(rf(new_s, raw_M, raw_E))
+    return r
 
 # 测试指数相加部分
 # e_a = {"orange": 1}
@@ -126,13 +137,20 @@ def multiplying(a: rf, b: rf):
 # print(b)
 # print(b.to_float())
 
+# # 测试尾数标准化步骤
+# sa = ".00001011e-1(+2)"
+# a = rf.from_string(sa)
+# # print(a)
+# print(formating(a))
+# print(rf.from_string(".1011e-101(+2)"))
+
 # 测试乘法
 print("### 乘数 a ###")
 # a = rf.from_string(rf.redstr(1.4271e+00))
 # a = rf.from_string(rf.redstr(-0.421875))
 # a = rf.from_string(rf.redstr(1.7347))
-sa = ".11011e-111(+2)" # 0.84375 * 2^(-5)
-# sa = ".00001101e-10110(+2)"
+# sa = ".11011e-111(+2)" # 0.84375 * 2^(-5)
+sa = ".00001101e-10110(+2)"
 a = rf.from_string(sa)
 print("[红石浮点数表示]")
 print(a)
@@ -144,8 +162,8 @@ print("### 乘数 b ###")
 # b = rf.from_string(rf.redstr(-1.1470e-05))
 # b = rf.from_string("-.11e-100(+2)") # -0.75 * 2^(-2)
 # b = rf.from_string(rf.redstr(1.7347))
-sb = "-.11e-100(+2)" # -0.75 * 2^(-2)
-# sb = "-.0001110001e-100010(+2)"
+# sb = "-.11e-100(+2)" # -0.75 * 2^(-2)
+sb = "-.0001110001e-100010(+2)"
 b = rf.from_string(sb)
 print("[红石浮点数表示]")
 print(b)
@@ -154,7 +172,7 @@ print(f"[十进制数值]")
 print(f"{b.to_float()}")
 
 print("### 计算结果 r ###")
-r = multiplying(a, b)
+r = multiplying(a, b, True)
 print("[红石浮点数表示]")
 print(r)
 print(f"[十进制数值]")
