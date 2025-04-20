@@ -50,66 +50,97 @@ class RedstoneFloat:
         return sign * mantissa * (2**(2-exponent))
 
     @staticmethod
-    def from_float(value: float) -> 'RedstoneFloat':
+    def from_string(encoded: str) -> 'RedstoneFloat':
         """
-        将一个 Python float 转换为 RedstoneFloat 表示。
+        从格式为 ".mantissa e -exponent (+2)" 的字符串创建 RedstoneFloat。
+        例如：".11011e-10000(+2)" 或 "-.1100000000000000e-00000010(+2)"
         """
-        import math
+        import re
 
-        # 处理符号位
-        s = 'obsidian' if value < 0 else ''
+        # 解析字符串
+        match = re.fullmatch(r'(-?)\.(\d{1,16})e-(\d{1,8})\(\+2\)', encoded)
+        if not match:
+            raise ValueError("Invalid format. Expected format: (-?).[01]{1,16}e-[01]{1,8}(+2)")
 
-        # 获取绝对值
-        abs_value = abs(value)
+        sign_str, mantissa_str, exponent_str = match.groups()
 
-        # 特殊处理0
-        if abs_value == 0:
-            return RedstoneFloat(s, {}, {})
+        # 解析符号
+        s = 'obsidian' if sign_str == '-' else ''
 
-        # 分离尾数和指数
-        exponent = math.floor(math.log2(abs_value))
-        mantissa = abs_value / (2 ** exponent)
+        # 填补 mantissa 和 exponent 到固定长度
+        mantissa_str = mantissa_str.ljust(16, '0')
+        exponent_str = exponent_str.rjust(8, '0')
 
-        # 尾数处理为 [0, 1) 之间
-        if mantissa >= 1:
-            mantissa /= 2
-            exponent += 1
-        exponent -= 2  # 调整指数偏移量
-        print(f"exponent: {exponent}(+2), mantissa: {mantissa}")
-
-        # 尾数转换为16色羊毛
+        # 颜色映射
         mantissa_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
-                        "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"]
-        # 依次表示 2^(-1), 2^(-2), 2^(-3), ..., 2^(-16)
-
-        M = {color: 0 for color in mantissa_colors}
-        remaining = mantissa
-        for i, color in enumerate(mantissa_colors):
-            bit_value = 2 ** (-i-1)
-            if remaining >= bit_value:
-                M[color] = 1
-                remaining -= bit_value
-
-        # 指数转换为8色混凝土
+                           "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"]
         exponent_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray"]
-        # 依次表示 1, 2, 4, ..., 2^(7)
-        # 但有偏移量 -2，且需要的指数多为负数，所以最终运算时应该是2^(2-value)
-        rev_exponent_colors = exponent_colors[::-1]
 
-        E = {color: 0 for color in exponent_colors}
-        exp_remaining = exponent
-        for i, color in enumerate(rev_exponent_colors):
-            bit_exp = 2 ** (7-i)
-            # print(f"i: {i}, bit_exp: {bit_exp}, exp_remaining: {exp_remaining}")
-            if -exp_remaining >= bit_exp:
-                E[color] = 1
-                # print(f"Adding color {color} to E")
-                exp_remaining += bit_exp
+        # 构造 M 字典
+        M = {
+            color: int(bit)
+            for color, bit in zip(mantissa_colors, mantissa_str)
+        }
+
+        # 构造 E 字典
+        exponent_bits = list(map(int, exponent_str))
+        # print(f"exponent_str:{exponent_str}, exponent_bits:{exponent_bits}")
+        exponent_value = sum(b << i for i, b in enumerate(exponent_bits))  # interpret as binary
+        # print(f"exponent_value:{exponent_value}")
+        E = {}
+        for i, color in enumerate(reversed(exponent_colors)):
+            bit = (exponent_value >> i) & 1
+            E[color] = bit
 
         return RedstoneFloat(s, M, E)
     
+    @staticmethod
+    def redstr(value: float) -> str:
+
+        if value == 0:
+            return ".0e-0(+2)"
+
+        # 处理符号
+        sign_str = '-' if value < 0 else ''
+        abs_value = abs(value)
+
+        # 拆分为尾数与指数
+        exponent = math.floor(math.log2(abs_value))
+        mantissa = abs_value / (2 ** exponent)
+
+        # 归一化 mantissa 到 [0.5, 1)
+        if mantissa >= 1:
+            mantissa /= 2
+            exponent += 1
+
+        exponent -= 2  # 偏移 +2 进入编码阶段（实际存储的是 -exponent）
+
+        # 构造 mantissa 位串
+        mantissa_bits = ''
+        remaining = mantissa
+        for i in range(16):
+            bit_value = 2 ** (-i - 1)
+            if remaining >= bit_value:
+                mantissa_bits += '1'
+                remaining -= bit_value
+            else:
+                mantissa_bits += '0'
+
+        # 去除 mantissa 尾部 0
+        mantissa_bits = mantissa_bits.rstrip('0') or '0'
+
+        # 构造 exponent 位串（处理为 -exponent，正整数形式）
+        exponent_val = -exponent
+        if exponent_val < 0 or exponent_val >= 256:
+            raise ValueError("Exponent out of range for 8-bit encoding")
+
+        exponent_bits = bin(exponent_val)[2:].zfill(8)
+        exponent_bits = exponent_bits.lstrip('0') or '0'
+
+        return f"{sign_str}.{mantissa_bits}e-{exponent_bits}(+2)"
+    
     def __repr__(self):
-        def format_dict(d, start_index, direction):
+        def format_dict(d, start_index):
             items = list(d.items())
             lines = []
             for i in range(0, len(items), 4):
@@ -117,13 +148,13 @@ class RedstoneFloat:
                 for j in range(4):
                     if i + j < len(items):
                         color, value = items[i + j]
-                        index = start_index + (i + j)*direction
+                        index = start_index + (i + j)
                         row.append(f"{color}({index}): 0" if value == 0 else f"\033[33m{color}({index}): 1\033[0m")
                 lines.append("\t".join(row))
             return "\n\t".join(lines)
 
-        M_repr = format_dict(self.M, -1, -1)
-        E_repr = format_dict(self.E, 0, 1)
+        M_repr = format_dict(self.M, -1)
+        E_repr = format_dict(self.E, 0)
 
         return f"RedstoneFloat: s= \033[33m{self.s}\033[0m\nM=\n\t{M_repr}\nE=\n\t{E_repr}"
     

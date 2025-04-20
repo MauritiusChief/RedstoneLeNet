@@ -1,5 +1,5 @@
 
-from redstone_float import RedstoneFloat
+from redstone_float import RedstoneFloat as rf
 
 
 def exponent_add(e_a: dict[str: int], e_b: dict[str: int]) -> dict[str: int]:
@@ -71,7 +71,7 @@ def mantissa_multiply(m_a: dict[str: int], m_b: dict[str: int]) -> dict[str: int
     # print(f"result: {result}")
     return result
 
-def multiplying(a: RedstoneFloat, b: RedstoneFloat):
+def multiplying(a: rf, b: rf):
     """实现基于位移加法的浮点数乘法"""
     
     # 模拟计算新符号位
@@ -89,7 +89,7 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
     # 计算尾数部分（位移加法乘法）
     raw_M = mantissa_multiply(a.M, b.M)
 
-    return RedstoneFloat(new_s, raw_M, raw_E)
+    return rf(new_s, raw_M, raw_E)
 
     mantissa_colors = ["white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
                     "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black"]
@@ -114,37 +114,41 @@ def multiplying(a: RedstoneFloat, b: RedstoneFloat):
     temp_slots_M = [0] * 16 # 清空位移装置
     temp_slots_E = [0] * 8 # 清空位移装置
     
-    return RedstoneFloat(new_s, new_M, new_E)
+    return rf(new_s, new_M, new_E)
 
 # 测试指数相加部分
 # e_a = {"orange": 1}
 # e_b = {"white": 1, "orange": 1}
 # print(exponent_add(e_a, e_b))
 
-# 测试to_float和from_float
-# a = RedstoneFloat.from_float(1.4271e+00)
-# # a = RedstoneFloat.from_float(0.75)
+# # 测试to_float和from_float
+# na = 1.4271e+00
+# # na = 0.75
+# print(rf.redstr(na))
+# a = rf.from_string(rf.redstr(na))
 # print(a)
 # print(a.to_float())
-# b = RedstoneFloat.from_float(1.1470e-05)
-# # b = RedstoneFloat.from_float(0.421875)
+# nb = 1.1470e-05
+# # nb = 0.421875
+# print(rf.redstr(nb))
+# b = rf.from_string(rf.redstr(nb))
 # print(b)
 # print(b.to_float())
 
 # 测试乘法
 print("### a ###")
-# a = RedstoneFloat.from_float(1.4271e+00)
-# a = RedstoneFloat.from_float(-0.421875)
-a = RedstoneFloat.from_float((0b11011/2**5) * 2**( -0b00000111 +2)) # 0.84375 * 2^(-5)
-# a = RedstoneFloat.from_float(1.7347)
-# a = RedstoneFloat.from_float((1/2) * 2**(-0b01001010 + 2))
+# a = rf.from_string(rf.redstr(1.4271e+00))
+# a = rf.from_string(rf.redstr(-0.421875))
+# a = rf.from_string(".11011e-111(+2)") # 0.84375 * 2^(-5)
+# a = rf.from_string(rf.redstr(1.7347))
+a = rf.from_string(".00001101e-10110(+2)")
 print(a)
 
 print("### b ###")
-# b = RedstoneFloat.from_float(-1.1470e-05)
-b = RedstoneFloat.from_float((0b11/2**2) * 2**( -0b00000100 +2)) # 0.75 * 2^(-2)
-# b = RedstoneFloat.from_float(1.7347)
-# b = RedstoneFloat.from_float((1/2) * 2**(-0b01101011 + 2))
+# b = rf.from_string(rf.redstr(-1.1470e-05))
+# b = rf.from_string("-.11e-100(+2)") # -0.75 * 2^(-2)
+# b = rf.from_string(rf.redstr(1.7347))
+b = rf.from_string(".0001110001e-100010(+2)")
 print(b)
 
 print("### r ###")
