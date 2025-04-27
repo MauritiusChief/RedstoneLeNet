@@ -45,15 +45,15 @@ def draw_digit():
     return canvas
 
 # Draw number
-# image_array = pd.read_csv("pre_draw/dig6.csv", header=None).values
-image_array = draw_digit()
-image_array[0,0] = 0
+image_array = pd.read_csv("pre_draw/dig6.csv", header=None).values
+# image_array = draw_digit()
+# image_array[0,0] = 0
 
 # print(image_array)
-with open('pre_draw/temp.csv', 'w', newline='') as csvfile:
-    spamwriter = csv.writer(csvfile, quotechar='|', quoting=csv.QUOTE_MINIMAL)
-    for row in image_array:
-        spamwriter.writerow([int(i) for i in row])
+# with open('pre_draw/temp.csv', 'w', newline='') as csvfile:
+#     spamwriter = csv.writer(csvfile, quotechar='|', quoting=csv.QUOTE_MINIMAL)
+#     for row in image_array:
+#         spamwriter.writerow([int(i) for i in row])
 
 weights = load_weights("redstone_lenet.pth")
 # print(weights.keys())

@@ -47,11 +47,11 @@ def show_mnist_samples(target_label, skip_num = 0, num_samples=5, cols=7):
     
     plt.tight_layout()
     # plt.savefig(f"pics/dig{target_label}_org_pg{skip_num//28}.png")
-    plt.savefig(f"pics/preprocess1/dig{target_label}_skl_pg{skip_num//28}.png")
-    # plt.show()
+    # plt.savefig(f"pics/preprocess1/dig{target_label}_skl_pg{skip_num//28}.png")
+    plt.show()
     return images
 
 # samples = show_mnist_samples(target_label=9, skip_num=28*0, num_samples=28)
-for d in range(10):
-    for p in range(1):
-        show_mnist_samples(target_label=d, skip_num=28*p, num_samples=28)
+# for d in range(10):
+#     for p in range(1):
+#         show_mnist_samples(target_label=d, skip_num=28*p, num_samples=28)
