@@ -1,4 +1,5 @@
 
+import csv
 import math
 import random
 import torch
@@ -17,15 +18,21 @@ def load_weights(filepath):
 weights = load_weights("redstone_lenet.pth")
 # print(weights.keys())
 
-# Random sample
-pred_limit = 1000
-sample_indices = random.sample(range(len(mnist_dataset)), pred_limit)
+pred_limit = 100
+# # 随机样本
+# sample_indices = random.sample(range(len(mnist_dataset)), pred_limit)
+
+# 特定标签的样本
+target_label = 9
+indices = [i for i, (_, label) in enumerate(mnist_dataset) if label == target_label]
+sample_indices = random.sample(indices, pred_limit)
 
 images = []
 labels = []
 predictions = []
 
 correct, total = 0, 0
+sample_written = False
 for idx in sample_indices:
     img_tensor, label = mnist_dataset[idx]
     img = img_tensor.squeeze(0).tolist()
@@ -38,6 +45,12 @@ for idx in sample_indices:
     if idx % 10 == 0:
         print(f"Current Accuracy: {100 * correct / total:.2f}%")
     # print(f"Label: {label} Pred: {pred}")
+    # if (pred == label) and not sample_written and random.random() < 0.02:
+    #     with open('pre_draw/temp.csv', 'w', newline='') as csvfile:
+    #         spamwriter = csv.writer(csvfile, quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    #         for row in img:
+    #             spamwriter.writerow([int(i) for i in row])
+    #     sample_written = True
     images.append(img)
     labels.append(label)
     predictions.append(pred)
