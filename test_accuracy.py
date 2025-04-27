@@ -18,7 +18,7 @@ weights = load_weights("redstone_lenet.pth")
 # print(weights.keys())
 
 # Random sample
-pred_limit = 100
+pred_limit = 1000
 sample_indices = random.sample(range(len(mnist_dataset)), pred_limit)
 
 images = []
@@ -35,7 +35,9 @@ for idx in sample_indices:
     pred = predict(img, weights)
     total += 1
     correct += (pred == label)
-    print(f"Label: {label} Pred: {pred}")
+    if idx % 10 == 0:
+        print(f"Current Accuracy: {100 * correct / total:.2f}%")
+    # print(f"Label: {label} Pred: {pred}")
     images.append(img)
     labels.append(label)
     predictions.append(pred)

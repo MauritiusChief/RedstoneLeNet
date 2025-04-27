@@ -5,7 +5,13 @@ def relu_cut(x):
     return max(0.0, min(x, 1.0))
 
 def tanh(x):
-    return math.tanh(x)
+    '''用Hard Tanh近似表示'''
+    if x < -1:
+        return -1
+    elif x > 1:
+        return 1
+    else:
+        return x
 
 def rsr(x):
     """返回最近的2^-14整数倍，模拟舍弃精度锯齿化后的计算"""
